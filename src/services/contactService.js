@@ -3,7 +3,7 @@
 export class ContactService {
   constructor() {
     this.apperClient = null;
-    this.tableName = 'contact3';
+    this.tableName = 'contact4';
     this.initializeClient();
   }
 

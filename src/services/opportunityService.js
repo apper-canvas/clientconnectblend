@@ -3,7 +3,7 @@
 export class OpportunityService {
   constructor() {
     this.apperClient = null;
-    this.tableName = 'opportunity3';
+    this.tableName = 'opportunity4';
     this.initializeClient();
   }
 
