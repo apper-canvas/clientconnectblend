@@ -1,9 +1,15 @@
 import React from 'react'
 import { motion } from 'framer-motion'
+import { useSelector } from 'react-redux'
+import { useContext } from 'react'
+import { AuthContext } from '../App'
 import MainFeature from '../components/MainFeature'
 import ApperIcon from '../components/ApperIcon'
 
 const Home = ({ darkMode, toggleDarkMode }) => {
+  const { user } = useSelector((state) => state.user)
+  const { logout } = useContext(AuthContext)
+
   return (
     <div className="min-h-screen">
       {/* Header */}
@@ -33,6 +39,19 @@ const Home = ({ darkMode, toggleDarkMode }) => {
             </div>
             
             <div className="flex items-center space-x-4">
+              {user && (
+                <div className="hidden sm:flex items-center space-x-3">
+                  <span className="text-sm text-surface-600 dark:text-surface-400">
+                    Welcome, {user.firstName || user.emailAddress}
+                  </span>
+                  <button
+                    onClick={logout}
+                    className="text-sm text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-100"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
               <motion.button
                 onClick={toggleDarkMode}
                 className="p-2 rounded-xl bg-surface-200 dark:bg-surface-700 hover:bg-surface-300 dark:hover:bg-surface-600 transition-all duration-200"

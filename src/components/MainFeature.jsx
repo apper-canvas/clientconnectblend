@@ -1,55 +1,18 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'react-toastify'
 import ApperIcon from './ApperIcon'
+import { contactService } from '../services/contactService'
+import { opportunityService } from '../services/opportunityService'
 
 const MainFeature = () => {
   const [activeTab, setActiveTab] = useState('contacts')
-  const [contacts, setContacts] = useState([
-    {
-      id: '1',
-      firstName: 'John',
-      lastName: 'Doe',
-      email: 'john.doe@example.com',
-      phone: '+1 (555) 123-4567',
-      company: 'TechCorp Inc.',
-      position: 'Marketing Director',
-      tags: ['VIP', 'Hot Lead'],
-      stage: 'qualified'
-    },
-    {
-      id: '2',
-      firstName: 'Sarah',
-      lastName: 'Smith',
-      email: 'sarah.smith@example.com',
-      phone: '+1 (555) 987-6543',
-      company: 'StartupXYZ',
-      position: 'CEO',
-      tags: ['Decision Maker'],
-      stage: 'proposal'
-    }
-  ])
-
-  const [opportunities, setOpportunities] = useState([
-    {
-      id: '1',
-      title: 'Enterprise Software Deal',
-      contactId: '1',
-      value: 50000,
-      stage: 'negotiation',
-      probability: 75,
-      assignedTo: 'Sales Team A'
-    },
-    {
-      id: '2',
-      title: 'Consulting Services',
-      contactId: '2',
-      value: 25000,
-      stage: 'proposal',
-      probability: 60,
-      assignedTo: 'Sales Team B'
-    }
-  ])
+  const [contacts, setContacts] = useState([])
+  const [opportunities, setOpportunities] = useState([])
+  const [isContactsLoading, setIsContactsLoading] = useState(false)
+  const [isOpportunitiesLoading, setIsOpportunitiesLoading] = useState(false)
+  const [contactsError, setContactsError] = useState(null)
+  const [opportunitiesError, setOpportunitiesError] = useState(null)
 
   const [newContact, setNewContact] = useState({
     firstName: '',
@@ -62,6 +25,66 @@ const MainFeature = () => {
 
   const [showAddContact, setShowAddContact] = useState(false)
   const [selectedContact, setSelectedContact] = useState(null)
+
+  // Load contacts from database
+  const loadContacts = async () => {
+    setIsContactsLoading(true)
+    setContactsError(null)
+    try {
+      const contactsData = await contactService.fetchContacts()
+      // Transform database fields to UI format
+      const transformedContacts = contactsData.map(contact => ({
+        id: contact.Id,
+        firstName: contact.first_name || '',
+        lastName: contact.last_name || '',
+        email: contact.email || '',
+        phone: contact.phone || '',
+        company: contact.company || '',
+        position: contact.position || '',
+        tags: contact.Tags ? contact.Tags.split(',').filter(tag => tag.trim()) : [],
+        stage: contact.stage || 'lead'
+      }))
+      setContacts(transformedContacts)
+    } catch (error) {
+      console.error('Error loading contacts:', error)
+      setContactsError(error.message)
+      toast.error('Failed to load contacts')
+    } finally {
+      setIsContactsLoading(false)
+    }
+  }
+
+  // Load opportunities from database
+  const loadOpportunities = async () => {
+    setIsOpportunitiesLoading(true)
+    setOpportunitiesError(null)
+    try {
+      const opportunitiesData = await opportunityService.fetchOpportunities()
+      // Transform database fields to UI format
+      const transformedOpportunities = opportunitiesData.map(opp => ({
+        id: opp.Id,
+        title: opp.title || '',
+        contactId: opp.contact || '',
+        value: opp.value || 0,
+        stage: opp.stage || 'lead',
+        probability: opp.probability || 0,
+        assignedTo: opp.assigned_to || ''
+      }))
+      setOpportunities(transformedOpportunities)
+    } catch (error) {
+      console.error('Error loading opportunities:', error)
+      setOpportunitiesError(error.message)
+      toast.error('Failed to load opportunities')
+    } finally {
+      setIsOpportunitiesLoading(false)
+    }
+  }
+
+  // Load data on component mount
+  useEffect(() => {
+    loadContacts()
+    loadOpportunities()
+  }, [])
 
   const tabs = [
     { id: 'contacts', label: 'Contacts', icon: 'Users' },
@@ -77,43 +100,91 @@ const MainFeature = () => {
     { id: 'closed', label: 'Closed Won', color: 'bg-green-500' }
   ]
 
-  const handleAddContact = () => {
+  const handleAddContact = async () => {
     if (!newContact.firstName || !newContact.lastName || !newContact.email) {
       toast.error('Please fill in required fields')
       return
     }
 
-    const contact = {
-      ...newContact,
-      id: Date.now().toString(),
-      tags: [],
-      stage: 'lead'
+    setIsContactsLoading(true)
+    try {
+      const contactData = [{
+        firstName: newContact.firstName,
+        lastName: newContact.lastName,
+        email: newContact.email,
+        phone: newContact.phone,
+        company: newContact.company,
+        position: newContact.position,
+        tags: [],
+        stage: 'lead'
+      }]
+
+      await contactService.createContacts(contactData)
+      
+      // Reset form
+      setNewContact({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        company: '',
+        position: ''
+      })
+      setShowAddContact(false)
+      
+      // Reload contacts
+      await loadContacts()
+      toast.success('Contact added successfully!')
+    } catch (error) {
+      console.error('Error adding contact:', error)
+      toast.error('Failed to add contact')
+    } finally {
+      setIsContactsLoading(false)
+    }
+  }
+
+  const handleDeleteContact = async (contactId) => {
+    if (!confirm('Are you sure you want to delete this contact?')) {
+      return
     }
 
-    setContacts([...contacts, contact])
-    setNewContact({
-      firstName: '',
-      lastName: '',
-      email: '',
-      phone: '',
-      company: '',
-      position: ''
-    })
-    setShowAddContact(false)
-    toast.success('Contact added successfully!')
+    setIsContactsLoading(true)
+    try {
+      await contactService.deleteContacts([contactId])
+      setSelectedContact(null)
+      await loadContacts()
+      toast.success('Contact deleted successfully!')
+    } catch (error) {
+      console.error('Error deleting contact:', error)
+      toast.error('Failed to delete contact')
+    } finally {
+      setIsContactsLoading(false)
+    }
   }
 
-  const handleDeleteContact = (contactId) => {
-    setContacts(contacts.filter(c => c.id !== contactId))
-    setSelectedContact(null)
-    toast.success('Contact deleted successfully!')
-  }
+  const moveOpportunity = async (oppId, newStage) => {
+    setIsOpportunitiesLoading(true)
+    try {
+      const opportunity = opportunities.find(opp => opp.id === oppId)
+      if (!opportunity) {
+        throw new Error('Opportunity not found')
+      }
 
-  const moveOpportunity = (oppId, newStage) => {
-    setOpportunities(opportunities.map(opp => 
-      opp.id === oppId ? { ...opp, stage: newStage } : opp
-    ))
-    toast.success('Opportunity moved successfully!')
+      const updatedOpportunity = {
+        ...opportunity,
+        stage: newStage,
+        Id: oppId
+      }
+
+      await opportunityService.updateOpportunities([updatedOpportunity])
+      await loadOpportunities()
+      toast.success('Opportunity moved successfully!')
+    } catch (error) {
+      console.error('Error moving opportunity:', error)
+      toast.error('Failed to move opportunity')
+    } finally {
+      setIsOpportunitiesLoading(false)
+    }
   }
 
   const getStageContacts = (stage) => {
@@ -187,8 +258,20 @@ const MainFeature = () => {
               </div>
 
               {/* Contact List */}
+              {isContactsLoading ? (
+                <div className="flex justify-center items-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                </div>
+              ) : contactsError ? (
+                <div className="text-center py-12 text-red-600">Error loading contacts: {contactsError}</div>
+              ) : (
               <div className="grid gap-4 md:gap-6">
-                {contacts.map((contact) => (
+                {contacts.length === 0 ? (
+                  <div className="text-center py-12 text-surface-600 dark:text-surface-400">
+                    No contacts found. Add your first contact to get started.
+                  </div>
+                ) : (
+                  contacts.map((contact) => (
                   <motion.div
                     key={contact.id}
                     className="bg-white dark:bg-surface-800 rounded-2xl p-6 shadow-card border border-surface-200 dark:border-surface-700 hover:shadow-soft transition-all duration-200"
@@ -242,8 +325,10 @@ const MainFeature = () => {
                       </div>
                     </div>
                   </motion.div>
-                ))}
+                  ))
+                )}
               </div>
+              )}
 
               {/* Add Contact Modal */}
               <AnimatePresence>
@@ -312,11 +397,12 @@ const MainFeature = () => {
                       <div className="flex items-center space-x-3 mt-6">
                         <motion.button
                           onClick={handleAddContact}
-                          className="flex-1 px-4 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-xl hover:shadow-lg transition-all duration-200"
+                          className="flex-1 px-4 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-xl hover:shadow-lg transition-all duration-200 disabled:opacity-50"
+                          disabled={isContactsLoading}
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
                         >
-                          Add Contact
+                          {isContactsLoading ? 'Adding...' : 'Add Contact'}
                         </motion.button>
                         <motion.button
                           onClick={() => setShowAddContact(false)}
@@ -353,6 +439,13 @@ const MainFeature = () => {
               </div>
 
               {/* Pipeline Board */}
+              {isOpportunitiesLoading ? (
+                <div className="flex justify-center items-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                </div>
+              ) : opportunitiesError ? (
+                <div className="text-center py-12 text-red-600">Error loading opportunities: {opportunitiesError}</div>
+              ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 lg:gap-6 overflow-x-auto">
                 {pipelineStages.map((stage) => (
                   <div key={stage.id} className="min-w-64 lg:min-w-0">
@@ -363,7 +456,12 @@ const MainFeature = () => {
                       </p>
                     </div>
                     <div className="bg-surface-50 dark:bg-surface-800 rounded-b-xl p-4 min-h-96 space-y-3 border-2 border-t-0 border-surface-200 dark:border-surface-700">
-                      {getStageOpportunities(stage.id).map((opportunity) => (
+                      {getStageOpportunities(stage.id).length === 0 ? (
+                        <div className="text-center py-8 text-surface-500 dark:text-surface-400 text-sm">
+                          No opportunities in this stage
+                        </div>
+                      ) : (
+                        getStageOpportunities(stage.id).map((opportunity) => (
                         <motion.div
                           key={opportunity.id}
                           className="bg-white dark:bg-surface-700 p-4 rounded-xl shadow-card border border-surface-200 dark:border-surface-600 cursor-move hover:shadow-soft transition-all duration-200"
@@ -404,7 +502,8 @@ const MainFeature = () => {
                                   <motion.button
                                     key={targetStage.id}
                                     onClick={() => moveOpportunity(opportunity.id, targetStage.id)}
-                                    className="p-1 rounded text-xs bg-surface-100 dark:bg-surface-600 hover:bg-surface-200 dark:hover:bg-surface-500 transition-colors duration-200"
+                                    className="p-1 rounded text-xs bg-surface-100 dark:bg-surface-600 hover:bg-surface-200 dark:hover:bg-surface-500 transition-colors duration-200 disabled:opacity-50"
+                                    disabled={isOpportunitiesLoading}
                                     whileHover={{ scale: 1.1 }}
                                     whileTap={{ scale: 0.9 }}
                                     title={`Move to ${targetStage.label}`}
@@ -416,11 +515,13 @@ const MainFeature = () => {
                             </div>
                           </div>
                         </motion.div>
-                      ))}
+                        ))
+                      )}
                     </div>
                   </div>
                 ))}
               </div>
+              )}
             </motion.div>
           )}
 
