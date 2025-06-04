@@ -3,7 +3,7 @@
 export class ProjectService {
   constructor() {
     this.apperClient = null;
-    this.tableName = 'project';
+    this.tableName = 'project1';
     this.initializeClient();
   }
 

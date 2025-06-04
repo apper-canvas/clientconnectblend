@@ -1,82 +1,105 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { useContext } from 'react';
 import { AuthContext } from '../App';
-import ProjectManagement from '../components/ProjectManagement';
 import ApperIcon from '../components/ApperIcon';
+import ProjectManagement from '../components/ProjectManagement';
 
 const Projects = ({ darkMode, toggleDarkMode }) => {
-  const { user } = useSelector((state) => state.user);
   const { logout } = useContext(AuthContext);
+  const { user, isAuthenticated } = useSelector((state) => state.user);
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-surface-50 dark:bg-surface-900">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-surface-900 dark:text-surface-100 mb-4">
+            Please log in to access Projects
+          </h1>
+          <Link 
+            to="/login"
+            className="btn-primary"
+          >
+            Go to Login
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-surface-50 to-surface-100 dark:from-surface-900 dark:to-surface-800">
       {/* Header */}
-      <motion.header 
-        className="glass-effect sticky top-0 z-40 backdrop-blur-xl"
-        initial={{ y: -100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6 }}
-      >
-        <div className="container mx-auto px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="relative">
-                <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center shadow-lg">
-                  <ApperIcon name="FolderOpen" className="h-6 w-6 text-white" />
+      <header className="glass-effect sticky top-0 z-40">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center space-x-8">
+              <Link to="/" className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center">
+                  <ApperIcon name="Zap" className="h-5 w-5 text-white" />
                 </div>
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-accent rounded-full animate-pulse"></div>
-              </div>
-              <div>
-                <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                  Projects
-                </h1>
-                <p className="text-xs text-surface-600 dark:text-surface-400 hidden sm:block">
-                  Project Management
-                </p>
-              </div>
+                <span className="text-xl font-bold text-surface-900 dark:text-surface-100">
+                  ClientConnect CRM
+                </span>
+              </Link>
+              
+              <nav className="hidden md:flex items-center space-x-8">
+                <Link 
+                  to="/"
+                  className="text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-100 transition-colors duration-200"
+                >
+                  Home
+                </Link>
+                <span className="text-primary font-medium">Projects</span>
+                <Link 
+                  to="/tasks"
+                  className="text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-100 transition-colors duration-200"
+                >
+                  Tasks
+                </Link>
+              </nav>
             </div>
-            
+
             <div className="flex items-center space-x-4">
               {user && (
                 <div className="hidden sm:flex items-center space-x-3">
-                  <span className="text-sm text-surface-600 dark:text-surface-400">
-                    Welcome, {user.firstName || user.emailAddress}
+                  <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                    {user.firstName?.[0] || user.emailAddress?.[0] || 'U'}
+                  </div>
+                  <span className="text-sm font-medium text-surface-700 dark:text-surface-300">
+                    {user.firstName} {user.lastName}
                   </span>
-                  <button
-                    onClick={logout}
-                    className="text-sm text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-100"
-                  >
-                    Logout
-                  </button>
                 </div>
               )}
               <motion.button
                 onClick={toggleDarkMode}
-                className="p-2 rounded-xl bg-surface-200 dark:bg-surface-700 hover:bg-surface-300 dark:hover:bg-surface-600 transition-all duration-200"
+                className="p-2 rounded-lg bg-surface-200 dark:bg-surface-700 hover:bg-surface-300 dark:hover:bg-surface-600 transition-colors duration-200"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
                 <ApperIcon 
                   name={darkMode ? "Sun" : "Moon"} 
-                  className="h-5 w-5 text-surface-700 dark:text-surface-300" 
+                  className="h-5 w-5 text-surface-600 dark:text-surface-400" 
                 />
+              </motion.button>
+              <motion.button
+                onClick={logout}
+                className="p-2 rounded-lg bg-surface-200 dark:bg-surface-700 hover:bg-surface-300 dark:hover:bg-surface-600 transition-colors duration-200"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <ApperIcon name="LogOut" className="h-5 w-5 text-surface-600 dark:text-surface-400" />
               </motion.button>
             </div>
           </div>
         </div>
-      </motion.header>
+      </header>
 
       {/* Main Content */}
-      <motion.main 
-        className="container mx-auto px-4 py-8 sm:px-6 lg:px-8"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-      >
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <ProjectManagement />
-      </motion.main>
+      </main>
     </div>
   );
 };

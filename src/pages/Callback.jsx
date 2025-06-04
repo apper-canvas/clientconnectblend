@@ -12,5 +12,4 @@ const Callback = () => {
     </div>
   )
 }
-
 export default Callback

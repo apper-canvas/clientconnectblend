@@ -91,7 +91,8 @@ const MainFeature = () => {
     { id: 'contacts', label: 'Contacts', icon: 'Users' },
     { id: 'pipeline', label: 'Sales Pipeline', icon: 'TrendingUp' },
     { id: 'analytics', label: 'Analytics', icon: 'BarChart3' },
-    { id: 'projects', label: 'Projects', icon: 'FolderOpen' }
+    { id: 'projects', label: 'Projects', icon: 'FolderOpen' },
+    { id: 'tasks', label: 'Tasks', icon: 'CheckSquare' }
   ]
 
   const pipelineStages = [
@@ -207,6 +208,18 @@ const MainFeature = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Tab Navigation */}
         <div className="flex flex-col sm:flex-row justify-center mb-12">
+          <motion.div
+            key="task-link"
+            className="mb-4 flex justify-center"
+          >
+            <Link 
+              to="/tasks"
+              className="text-primary hover:text-primary-dark font-medium flex items-center space-x-2"
+            >
+              <ApperIcon name="CheckSquare" className="h-5 w-5" />
+              <span>Go to Task Management →</span>
+            </Link>
+          </motion.div>
           <div className="flex bg-white dark:bg-surface-800 rounded-2xl p-2 shadow-card border border-surface-200 dark:border-surface-700 overflow-x-auto">
             {tabs.map((tab) => (
               <motion.button
@@ -653,6 +666,20 @@ const MainFeature = () => {
               transition={{ duration: 0.3 }}
             >
               <ProjectManagement />
+            </motion.div>
+          )}
+
+          {activeTab === 'tasks' && (
+            <motion.div
+              key="tasks"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.3 }}
+              className="text-center py-12"
+            >
+              <p className="text-surface-600 dark:text-surface-400 mb-4">Task management is available on a dedicated page.</p>
+              <Link to="/tasks" className="btn-primary">Go to Tasks</Link>
             </motion.div>
           )}
         </AnimatePresence>
