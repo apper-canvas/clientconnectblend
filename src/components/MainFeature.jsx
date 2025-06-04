@@ -4,6 +4,7 @@ import { toast } from 'react-toastify'
 import ApperIcon from './ApperIcon'
 import { contactService } from '../services/contactService'
 import { opportunityService } from '../services/opportunityService'
+import ProjectManagement from './ProjectManagement'
 
 const MainFeature = () => {
   const [activeTab, setActiveTab] = useState('contacts')
@@ -89,7 +90,8 @@ const MainFeature = () => {
   const tabs = [
     { id: 'contacts', label: 'Contacts', icon: 'Users' },
     { id: 'pipeline', label: 'Sales Pipeline', icon: 'TrendingUp' },
-    { id: 'analytics', label: 'Analytics', icon: 'BarChart3' }
+    { id: 'analytics', label: 'Analytics', icon: 'BarChart3' },
+    { id: 'projects', label: 'Projects', icon: 'FolderOpen' }
   ]
 
   const pipelineStages = [
@@ -639,6 +641,18 @@ const MainFeature = () => {
                   })}
                 </div>
               </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'projects' && (
+            <motion.div
+              key="projects"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <ProjectManagement />
             </motion.div>
           )}
         </AnimatePresence>

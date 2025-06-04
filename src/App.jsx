@@ -10,6 +10,7 @@ import Callback from './pages/Callback';
 import ErrorPage from './pages/ErrorPage';
 import Home from './pages/Home';
 import NotFound from './pages/NotFound';
+import Projects from './pages/Projects';
 
 // Create auth context
 export const AuthContext = createContext(null);
@@ -130,6 +131,7 @@ function App() {
             <Route path="/callback" element={<Callback />} />
             <Route path="/error" element={<ErrorPage />} />
             <Route path="/" element={<Home darkMode={darkMode} toggleDarkMode={toggleDarkMode} />} />
+            <Route path="/projects" element={<Projects darkMode={darkMode} toggleDarkMode={toggleDarkMode} />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <ToastContainer
